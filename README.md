@@ -112,100 +112,71 @@
             <label>Relación de Parentesco (si es menor de 16 años):</label>
             <input type="text" name="relacion_parentesco" id="relacion_parentesco">
             
-            <h3>Firma:</h3><canvas id="firmaCanvas" width="400" height="150"></canvas>
+            <canvas id="firmaCanvas" width="400" height="150"></canvas>
 <button type="button" onclick="limpiarFirma()">Limpiar Firma</button>
 
 <script>
-    let canvas = document.getElementById('firmaCanvas');
-    let ctx = canvas.getContext('2d');
-    let painting = false;
+    let canvas = document.getElementById("firmaCanvas");
+    let ctx = canvas.getContext("2d");
 
-    // Configurar eventos para PC
-    canvas.addEventListener('mousedown', startPosition);
-    canvas.addEventListener('mouseup', endPosition);
-    canvas.addEventListener('mousemove', draw);
+    let firmando = false;
 
-    // Configurar eventos para móviles (touch)
-    canvas.addEventListener('touchstart', startPosition);
-    canvas.addEventListener('touchend', endPosition);
-    canvas.addEventListener('touchmove', draw);
-
-    function startPosition(e) {
-        painting = true;
-        draw(e); // Para empezar a dibujar de inmediato
-    }
-
-    function endPosition() {
-        painting = false;
-        ctx.beginPath(); // Reinicia el trazo
-    }
-
-    function draw(e) {
-        if (!painting) return;
-
-        // Detecta si es touch o mouse
-        let posX, posY;
-        if (e.touches) {
-            posX = e.touches[0].clientX - canvas.offsetLeft;
-            posY = e.touches[0].clientY - canvas.offsetTop;
-        } else {
-            posX = e.clientX - canvas.offsetLeft;
-            posY = e.clientY - canvas.offsetTop;
-        }
-
+    // Ajustar el tamaño del canvas en dispositivos móviles
+    function ajustarCanvas() {
+        let rect = canvas.getBoundingClientRect();
+        canvas.width = rect.width;
+        canvas.height = rect.height;
+        ctx.strokeStyle = "black";
         ctx.lineWidth = 2;
-        ctx.lineCap = 'round';
-        ctx.strokeStyle = 'black';
-
-        ctx.lineTo(posX, posY);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.moveTo(posX, posY);
-
-        e.preventDefault(); // Evita el scroll en móviles
+        ctx.lineJoin = "round";
+        ctx.lineCap = "round";
     }
 
+    ajustarCanvas(); // Llamamos al inicio
+
+    // Dibujar con el ratón
+    canvas.addEventListener("mousedown", (e) => {
+        firmando = true;
+        ctx.beginPath();
+        ctx.moveTo(e.offsetX, e.offsetY);
+    });
+
+    canvas.addEventListener("mousemove", (e) => {
+        if (!firmando) return;
+        ctx.lineTo(e.offsetX, e.offsetY);
+        ctx.stroke();
+    });
+
+    canvas.addEventListener("mouseup", () => {
+        firmando = false;
+    });
+
+    // Dibujar con el dedo en móviles
+    canvas.addEventListener("touchstart", (e) => {
+        e.preventDefault(); // Evitar el desplazamiento de la pantalla
+        firmando = true;
+        let touch = e.touches[0];
+        let rect = canvas.getBoundingClientRect();
+        ctx.beginPath();
+        ctx.moveTo(touch.clientX - rect.left, touch.clientY - rect.top);
+    });
+
+    canvas.addEventListener("touchmove", (e) => {
+        if (!firmando) return;
+        e.preventDefault();
+        let touch = e.touches[0];
+        let rect = canvas.getBoundingClientRect();
+        ctx.lineTo(touch.clientX - rect.left, touch.clientY - rect.top);
+        ctx.stroke();
+    });
+
+    canvas.addEventListener("touchend", () => {
+        firmando = false;
+    });
+
+    // Limpiar firma
     function limpiarFirma() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
     }
 </script>
-        
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            let today = new Date().toISOString().split("T")[0];
-            document.getElementById("fecha_parte").innerText = today;
-        });
 
-        function limpiarFirma() {
-            const canvas = document.getElementById('firmaCanvas');
-            const ctx = canvas.getContext('2d');
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-        }
-
-        function procesarDNI() {
-            const input = document.getElementById('dniFoto');
-            if (input.files.length > 0) {
-                const file = input.files[0];
-                const reader = new FileReader();
-                reader.onload = function() {
-                    Tesseract.recognize(reader.result, 'spa')
-                        .then(({ data: { text } }) => {
-                            console.log(text);
-                            document.getElementById("nombre").value = extraerDato(text, "Nombre:");
-                            document.getElementById("apellidos").value = extraerDato(text, "Apellidos:");
-                            document.getElementById("sexo").value = extraerDato(text, "Sexo:");
-                            document.getElementById("dni").value = extraerDato(text, "DNI:");
-                        });
-                };
-                reader.readAsDataURL(file);
-            }
-        }
-
-        function extraerDato(texto, etiqueta) {
-            const regex = new RegExp(etiqueta + " (.*?)\n");
-            const match = texto.match(regex);
-            return match ? match[1] : "";
-        }
-    </script>
-</body>
-</html>
