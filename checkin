@@ -112,12 +112,64 @@
             <label>Relación de Parentesco (si es menor de 16 años):</label>
             <input type="text" name="relacion_parentesco" id="relacion_parentesco">
             
-            <h3>Firma:</h3>
-            <canvas id="firmaCanvas" width="400" height="150"></canvas>
-            <button type="button" onclick="limpiarFirma()">Limpiar Firma</button>
-        </form>
-    </div>
+            <h3>Firma:</h3><canvas id="firmaCanvas" width="400" height="150"></canvas>
+<button type="button" onclick="limpiarFirma()">Limpiar Firma</button>
 
+<script>
+    let canvas = document.getElementById('firmaCanvas');
+    let ctx = canvas.getContext('2d');
+    let painting = false;
+
+    // Configurar eventos para PC
+    canvas.addEventListener('mousedown', startPosition);
+    canvas.addEventListener('mouseup', endPosition);
+    canvas.addEventListener('mousemove', draw);
+
+    // Configurar eventos para móviles (touch)
+    canvas.addEventListener('touchstart', startPosition);
+    canvas.addEventListener('touchend', endPosition);
+    canvas.addEventListener('touchmove', draw);
+
+    function startPosition(e) {
+        painting = true;
+        draw(e); // Para empezar a dibujar de inmediato
+    }
+
+    function endPosition() {
+        painting = false;
+        ctx.beginPath(); // Reinicia el trazo
+    }
+
+    function draw(e) {
+        if (!painting) return;
+
+        // Detecta si es touch o mouse
+        let posX, posY;
+        if (e.touches) {
+            posX = e.touches[0].clientX - canvas.offsetLeft;
+            posY = e.touches[0].clientY - canvas.offsetTop;
+        } else {
+            posX = e.clientX - canvas.offsetLeft;
+            posY = e.clientY - canvas.offsetTop;
+        }
+
+        ctx.lineWidth = 2;
+        ctx.lineCap = 'round';
+        ctx.strokeStyle = 'black';
+
+        ctx.lineTo(posX, posY);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(posX, posY);
+
+        e.preventDefault(); // Evita el scroll en móviles
+    }
+
+    function limpiarFirma() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+</script>
+        
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             let today = new Date().toISOString().split("T")[0];
