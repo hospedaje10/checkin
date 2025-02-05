@@ -44,6 +44,66 @@
         }
     </style>
 </head>
+<script>
+    function procesarDNI() {
+        let input = document.getElementById("dniFoto");
+        if (input.files.length === 0) {
+            alert("Por favor, sube una imagen del DNI.");
+            return;
+        }
+
+        let archivo = input.files[0];
+        let imagenURL = URL.createObjectURL(archivo);
+
+        Tesseract.recognize(
+            imagenURL,
+            'spa', // Español
+            { logger: m => console.log(m) } // Ver el progreso en la consola
+        ).then(({ data: { text } }) => {
+            console.log("Texto extraído:", text);
+            rellenarFormulario(text);
+        });
+    }
+
+    function rellenarFormulario(texto) {
+        // Expresiones regulares para extraer datos del DNI
+        let nombreMatch = texto.match(/NOMBRE[:\s]+([\w\s]+)/i);
+        let apellidosMatch = texto.match(/APELLIDOS[:\s]+([\w\s]+)/i);
+        let sexoMatch = texto.match(/SEXO[:\s]+(M|F)/i);
+        let dniMatch = texto.match(/([0-9]{8,9}[A-Z])/);
+        let soporteMatch = texto.match(/SOPORTE[:\s]+([\w\d]+)/i);
+        let nacionalidadMatch = texto.match(/NACIONALIDAD[:\s]+([\w\s]+)/i);
+        let nacimientoMatch = texto.match(/FECHA\s*DE\s*NACIMIENTO[:\s]+(\d{2}\/\d{2}\/\d{4})/i);
+        let expedicionMatch = texto.match(/FECHA\s*DE\s*EXPEDICION[:\s]+(\d{2}\/\d{2}\/\d{4})/i);
+        let direccionMatch = texto.match(/DIRECCION[:\s]+([\w\s,]+)/i);
+        let cpMatch = texto.match(/C\.?P\.?[:\s]+(\d{5})/i);
+        let localidadMatch = texto.match(/LOCALIDAD[:\s]+([\w\s]+)/i);
+        let paisMatch = texto.match(/PAIS[:\s]+([\w\s]+)/i);
+        let telefonoMatch = texto.match(/TEL[ÉE]FONO[:\s]+([\d\s]+)/i);
+
+        // Asignar valores si se encuentran
+        if (nombreMatch) document.getElementById("nombre").value = nombreMatch[1].trim();
+        if (apellidosMatch) document.getElementById("apellidos").value = apellidosMatch[1].trim();
+        if (sexoMatch) document.getElementById("sexo").value = sexoMatch[1].trim();
+        if (dniMatch) document.getElementById("dni").value = dniMatch[1].trim();
+        if (soporteMatch) document.getElementById("n_soporte").value = soporteMatch[1].trim();
+        if (nacionalidadMatch) document.getElementById("nacionalidad").value = nacionalidadMatch[1].trim();
+        if (nacimientoMatch) document.getElementById("fecha_nacimiento").value = formatearFecha(nacimientoMatch[1]);
+        if (expedicionMatch) document.getElementById("fecha_expedicion").value = formatearFecha(expedicionMatch[1]);
+        if (direccionMatch) document.getElementById("direccion").value = direccionMatch[1].trim();
+        if (cpMatch) document.getElementById("codigo_postal").value = cpMatch[1].trim();
+        if (localidadMatch) document.getElementById("localidad").value = localidadMatch[1].trim();
+        if (paisMatch) document.getElementById("pais").value = paisMatch[1].trim();
+        if (telefonoMatch) document.getElementById("telefono_movil").value = telefonoMatch[1].trim();
+    }
+
+    function formatearFecha(fecha) {
+        let partes = fecha.split("/");
+        return `${partes[2]}-${partes[1]}-${partes[0]}`; // Convertir a formato YYYY-MM-DD
+    }
+</script>
+</body>
+
 <body>
     <div class="info-lateral">
         <h3>Datos del Alojamiento</h3>
